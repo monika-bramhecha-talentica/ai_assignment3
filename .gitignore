@@ -1,0 +1,5 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+third-assignment-sample-data-set (1).zip

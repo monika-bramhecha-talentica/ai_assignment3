@@ -1,0 +1,109 @@
+
+======================================================================
+City delayed yesterday (example: Bengaluru)
+Scope: City delayed yesterday (example: Bengaluru)
+Orders analyzed: 997
+Late/failed rate: 12.34%
+Top causes:
+- traffic: 591
+- event: 468
+- late_delivery: 418
+- weather: 407
+- address_issue: 367
+Recommendations:
+- traffic: Dynamic routing and slot re-allocation during congestion.
+- event: Create blackout/slowdown plans for strikes/holidays.
+- late_delivery: Improve ETA promises; increase visibility with live tracking.
+- weather: Pre-alert customers, buffer ETAs, and prioritize essentials.
+- address_issue: Pre-ship address validation and driver assistance.
+Sample impacted order_ids: [3419, 6392, 2769, 2769, 2769]
+
+======================================================================
+Client X failures last 7 days (example: Saini LLC)
+Scope: Client X failures last 7 days (example: Saini LLC)
+Orders analyzed: 28
+Late/failed rate: 10.71%
+Top causes:
+- traffic: 19
+- event: 18
+- weather: 16
+- address_issue: 10
+- cancellation: 8
+Recommendations:
+- traffic: Dynamic routing and slot re-allocation during congestion.
+- event: Create blackout/slowdown plans for strikes/holidays.
+- weather: Pre-alert customers, buffer ETAs, and prioritize essentials.
+- address_issue: Pre-ship address validation and driver assistance.
+Sample impacted order_ids: [3795, 3795, 3795, 3795, 373]
+
+======================================================================
+Warehouse B August issues (example: Warehouse 2)
+Scope: Warehouse B August issues (example: Warehouse 2)
+Orders analyzed: 170
+Late/failed rate: 14.71%
+Top causes:
+- traffic: 114
+- event: 100
+- weather: 78
+- late_delivery: 70
+- dispatch_lag: 68
+Recommendations:
+- traffic: Dynamic routing and slot re-allocation during congestion.
+- event: Create blackout/slowdown plans for strikes/holidays.
+- weather: Pre-alert customers, buffer ETAs, and prioritize essentials.
+- late_delivery: Improve ETA promises; increase visibility with live tracking.
+- dispatch_lag: Tighter handoff SOP; create cut-off alerts.
+Sample impacted order_ids: [7999, 1762, 9479, 9479, 9479]
+
+======================================================================
+Compare Pune vs Chennai (2025-08-01 to 2025-08-31)
+Scope: Pune
+Orders analyzed: 66
+Late/failed rate: 15.15%
+Top causes:
+- event: 40
+- traffic: 36
+- late_delivery: 29
+- weather: 29
+- stockout: 23
+Recommendations:
+- event: Create blackout/slowdown plans for strikes/holidays.
+- traffic: Dynamic routing and slot re-allocation during congestion.
+- late_delivery: Improve ETA promises; increase visibility with live tracking.
+- weather: Pre-alert customers, buffer ETAs, and prioritize essentials.
+- stockout: Tighten inventory checks; add backup stock and substitute rules.
+Sample impacted order_ids: [4401, 239, 4840, 4840, 4840]
+Scope: Chennai
+Orders analyzed: 107
+Late/failed rate: 18.69%
+Top causes:
+- traffic: 62
+- event: 51
+- late_delivery: 44
+- weather: 40
+- address_issue: 28
+Recommendations:
+- traffic: Dynamic routing and slot re-allocation during congestion.
+- event: Create blackout/slowdown plans for strikes/holidays.
+- late_delivery: Improve ETA promises; increase visibility with live tracking.
+- weather: Pre-alert customers, buffer ETAs, and prioritize essentials.
+- address_issue: Pre-ship address validation and driver assistance.
+Sample impacted order_ids: [6340, 8577, 8577, 8577, 6340]
+
+======================================================================
+Festival/peak period outlook (Oct 2025)
+No orders matched the filter.
+
+======================================================================
+Onboarding risk outlook for Client Y (hypothetical)
+Baseline late rate: 12.71% | projected delayed orders per month: ~2542
+Top network risks to mitigate before launch:
+- traffic: 6033 occurrences | Dynamic routing and slot re-allocation during congestion.
+- event: 4766 occurrences | Create blackout/slowdown plans for strikes/holidays.
+- weather: 4263 occurrences | Pre-alert customers, buffer ETAs, and prioritize essentials.
+- late_delivery: 4165 occurrences | Improve ETA promises; increase visibility with live tracking.
+- address_issue: 3469 occurrences | Pre-ship address validation and driver assistance.
+Operational playbook:
+- Stagger rollout by city/warehouse; start with top-performing lanes.
+- Holdback 5% capacity as surge buffer; pre-book extra vehicles.
+- Enforce address validation + customer contactability checks on day 1.
