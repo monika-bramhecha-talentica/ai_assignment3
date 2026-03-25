@@ -1,165 +1,168 @@
-# Delivery Failure Root-Cause Analysis System
+# Delivery Failure Root-Cause Analysis Solution Document
 
 ## 1. Executive Summary
-This project analyzes multi-domain logistics data to identify why deliveries fail or get delayed, not just how many were affected. The solution combines order records, fleet logs, warehouse operations, external disruption signals, and customer feedback into one enriched order-level view. A rule-based inference engine then assigns likely root causes and generates action-oriented recommendations for operations teams.
+This solution addresses the logistics challenge of explaining why deliveries fail or get delayed across siloed systems. The implementation uses a table-first architecture:
 
-The implementation is available in `analyze_deliveries.py`, with setup validation in `test_setup.py`, and sample run outputs captured in `docs/sample_outputs.txt`.
+1. Load all sample CSV files into SQL tables.
+2. Build an enriched analysis view over those tables.
+3. Infer likely root causes using transparent business rules.
+4. Surface answers through a simple Streamlit dashboard with guided problem statements and explainable outputs.
 
----
+The system supports all requested sample use cases, including city and client diagnostics, warehouse-specific failure reasons, city comparisons, festival-risk analysis, and onboarding risk simulation.
 
-## 2. Business Problem
-Delivery performance issues are driven by multiple systems and stakeholders. Manual diagnosis across siloed data sources is slow and error-prone. The required capability is an automated workflow that can:
-- Correlate events across order lifecycle stages.
-- Explain likely root causes in plain language.
-- Prioritize operational actions per scenario.
+## 2. Problem Context
+Delivery failures are influenced by multiple factors that live in different systems:
 
----
+- Orders and promised vs actual delivery timelines
+- Fleet execution notes and transit movement
+- Warehouse processing bottlenecks
+- External disruptions (traffic/weather/events)
+- Customer feedback and sentiment
 
-## 3. Data Set Studied
+Manual investigation across these systems is slow and reactive. The objective is to generate fast, human-readable root-cause insights and action recommendations.
+
+## 3. Data Sources and Model
 Data folder: `third-assignment-sample-data-set/`
 
-Files analyzed:
+### 3.1 Source Files
 - `orders.csv`
 - `fleet_logs.csv`
 - `warehouse_logs.csv`
 - `external_factors.csv`
 - `feedback.csv`
 - `warehouses.csv`
-- `drivers.csv`
 - `clients.csv`
+- `drivers.csv`
 
-### Data model (high level)
-- Primary analytical grain: **order_id**.
-- Core fact table: `orders.csv`.
-- Event tables joined by `order_id`: fleet, warehouse, external factors, feedback.
-- Dimension enrichment:
-  - Warehouse metadata from `warehouses.csv` via `warehouse_id`.
-  - Client metadata from `clients.csv` via `client_id`.
+### 3.2 Table Mapping
+- `orders.csv` -> `raw_orders`
+- `fleet_logs.csv` -> `raw_fleet_logs`
+- `warehouse_logs.csv` -> `raw_warehouse_logs`
+- `external_factors.csv` -> `raw_external_factors`
+- `feedback.csv` -> `raw_feedback`
+- `warehouses.csv` -> `dim_warehouses`
+- `clients.csv` -> `dim_clients`
+- `drivers.csv` -> `dim_drivers`
 
-### Observed structure notes
-- `orders.csv` includes lifecycle dates (`order_date`, `promised_delivery_date`, `actual_delivery_date`), status, amount, and failure reason.
-- Event tables can contain multiple records per `order_id`; script aggregates these to one order-level view before final inference.
-- Missing `actual_delivery_date` is expected for non-delivered orders.
+### 3.3 Join Logic
+- Primary key: `order_id`
+- Secondary keys: `client_id`, `warehouse_id`, `driver_id`
 
----
+## 4. Solution Architecture
 
-## 4. Solution Approach Implemented
+### 4.1 Data Ingestion Layer
+Implemented in `init_db.py`:
 
-### 4.1 Ingestion and Enrichment
-- Parse timestamp columns from all CSVs.
-- Standardize selected numeric columns.
-- Merge operational and contextual data into one enriched orders DataFrame.
+- Creates a local SQLite database (`analytics.db`)
+- Loads all sample CSV files into corresponding tables
+- Normalizes datetime columns into SQL-compatible text format
+- Adds indexes on critical join keys
+- Validates row counts for all loaded tables
 
-### 4.2 Feature Engineering
-Derived metrics include:
-- `delay_hours` = actual delivery timestamp minus promised delivery timestamp.
-- `is_late` flag from delay threshold.
-- `transit_hours` from fleet departure/arrival.
-- `picking_minutes` and `dispatch_lag_minutes` from warehouse logs.
-- External traffic severity score (Heavy > Moderate > Clear).
-- Feedback tags from keyword extraction (e.g., delay, address, stock, communication).
+### 4.2 Analysis Modeling Layer
+Implemented in `build_analysis_model.py`:
 
-### 4.3 Root-Cause Inference Rules
-Cause labels detected per order from structured and textual signals:
-- `stockout`
-- `warehouse_delay`
-- `dispatch_lag`
-- `traffic`
-- `weather`
-- `event`
-- `address_issue`
-- `vehicle_issue`
-- `late_delivery`
-- `poor_comm`
+- Builds `fact_order_analysis` view by joining raw and dimension tables
+- Computes reusable metrics:
+  - `delay_hours`
+  - `is_late`
+  - `transit_hours`
+  - `picking_minutes`
+  - `dispatch_lag_minutes`
+  - `traffic_score`
+- Aggregates feedback context and external factors per order
+- Generates `fact_order_causes` table with inferred cause labels and mapped recommendations
 
-### 4.4 Insight Generation
-For a selected scope (city/client/warehouse/date range), the script outputs:
-- Orders analyzed.
-- Late/failed rate.
-- Top causes with counts.
-- Recommendations mapped to each cause.
-- Sample impacted order IDs.
+### 4.3 Dashboard and Query Layer
+Implemented in `dashboard.py`:
 
----
+- Displays data availability ranges
+- Supports filter-based analysis (city/client/warehouse/date range)
+- Shows KPI cards, top causes, impacted samples, and recommendations
+- Includes sample-problem templates from the assignment
+- Provides one-click guided analysis and explainable answer section
+- Supports user-entered "similar questions" with template intent mapping
 
-## 5. Scenario Results (Sample Run)
-Source: `docs/sample_outputs.txt`
+## 5. Root-Cause Inference Method
+The system uses transparent rule-based logic (easy to explain during demo):
 
-### Use Case 1: City delays (Bengaluru example)
-- Orders analyzed: **997**
-- Late/failed rate: **12.34%**
-- Top causes: `traffic (591)`, `event (468)`, `late_delivery (418)`, `weather (407)`, `address_issue (367)`
+- `stockout`: stock-related keywords in failure/notes/feedback
+- `warehouse_delay`: slow-packing notes or high picking time
+- `dispatch_lag`: high dispatch lag threshold breach
+- `traffic`: traffic severity or congestion notes
+- `weather`: rain/fog conditions
+- `event`: strike/holiday/event markers
+- `address_issue`: address-related complaint patterns
+- `vehicle_issue`: breakdown-related signals
+- `late_delivery`: delay exceeds threshold
+- `poor_comm`: communication-gap language (for example, "no update")
 
-### Use Case 2: Client failures (Saini LLC example)
-- Orders analyzed: **28**
-- Late/failed rate: **10.71%**
-- Top causes: `traffic (19)`, `event (18)`, `weather (16)`, `address_issue (10)`, `cancellation (8)`
+Multiple causes may be assigned to a single order when evidence supports it.
 
-### Use Case 3: Warehouse August issues (Warehouse 2 example)
-- Orders analyzed: **170**
-- Late/failed rate: **14.71%**
-- Top causes: `traffic (114)`, `event (100)`, `weather (78)`, `late_delivery (70)`, `dispatch_lag (68)`
+## 6. Supported Business Questions
+The implementation supports the required questions:
 
-### Use Case 4: City comparison (Pune vs Chennai, Aug 2025)
-- Pune: **66** orders, **15.15%** late/failed rate
-- Chennai: **107** orders, **18.69%** late/failed rate
-- Observation: Chennai shows higher late/failed rate in this window.
+1. Why were deliveries delayed in city X (now using selected date range)?
+2. Why did Client X's orders fail in the past week?
+3. Top reasons for delivery failures linked to Warehouse B in August.
+4. Compare delivery failure causes between City A and City B last month.
+5. Likely causes during festival period and preparation recommendations.
+6. Onboarding Client Y (+20,000 monthly orders) risk and mitigations.
 
-### Use Case 5: Festival/peak period outlook (Oct 2025)
-- No matching orders in selected filter window for this sample run.
+## 7. Dashboard Explanation Output
+For each selected question, the dashboard returns:
 
-### Use Case 6: Onboarding risk (20k monthly orders, hypothetical)
-- Baseline late rate: **12.71%**
-- Projected delayed orders/month: **~2542**
-- Top network risks: traffic, event, weather, late_delivery, address_issue
+- Scope analyzed
+- KPI summary
+- Top cause distribution
+- Sample impacted orders
+- Action recommendations
+- Explanation text of how the answer was derived
 
----
+This satisfies the need for human-readable, decision-oriented outputs.
 
-## 6. Operational Recommendations
-Top recurring actions from inference-to-playbook mapping:
-- Traffic risk: dynamic routing and slot re-allocation.
-- Event disruptions: strike/holiday slowdown plans.
-- Weather impact: buffered ETA and proactive customer alerts.
-- Late delivery trend: improve promise calibration and live tracking visibility.
-- Address issues: pre-ship address validation and driver assist workflows.
-- Dispatch lag: stricter warehouse handoff SLA and cutoff alerts.
+## 8. Date Range Availability in Current Dataset
+Validated from the loaded tables:
 
----
+- Order activity range: `2025-01-01` to `2025-09-19`
+- Full dataset range (including master data): `2020-01-01` to `2025-09-19`
 
-## 7. Assumptions and Limitations
-- Rule-based inference is transparent and fast but not probabilistic/ML-ranked.
-- Some orders can map to multiple causes simultaneously.
-- Quality of free-text fields (notes/feedback) affects keyword-based signals.
-- Scenario metrics vary based on selected city/client/date filters.
+## 9. How to Run
 
----
+```bash
+cd /Users/monika/projects/ai_assignemnts
+source .venv/bin/activate
+python init_db.py
+python build_analysis_model.py
+streamlit run dashboard.py
+```
 
-## 8. Reproducibility Steps
-1. Activate environment:
-   - `source .venv/bin/activate`
-2. Validate setup:
-   - `python test_setup.py`
-3. Run analysis:
-   - `python analyze_deliveries.py`
-4. Capture output:
-   - `python analyze_deliveries.py > docs/sample_outputs.txt`
+Optional CLI analytics run:
 
----
+```bash
+python analyze_deliveries.py
+```
 
-## 9. Submission Checklist
-- [x] Working analytics script: `analyze_deliveries.py`
-- [x] Setup verification script: `test_setup.py`
-- [x] Solution documentation: `docs/solution_writeup.md`
-- [x] Sample output artifact: `docs/sample_outputs.txt`
-- [ ] Convert this report to `.docx`
-- [ ] Record demo video with voice narration
-- [ ] Share GitHub repository link
+## 10. Deliverables Produced
+- Table-first ingestion script: `init_db.py`
+- Analysis view/cause builder: `build_analysis_model.py`
+- Interactive dashboard: `dashboard.py`
+- Implementation plan: `PLAN.md`
+- Problem statement input: `problem_statements.txt`
+- Sample run output capture: `docs/sample_outputs.txt`
 
----
+## 11. Limitations and Next Improvements
 
-## 10. Suggested Demo Narration (7–8 minutes)
-1. Introduce business problem and source tables.
-2. Explain enrichment and feature engineering pipeline.
-3. Run city/client/warehouse scenarios and interpret causes.
-4. Show city comparison and onboarding risk estimate.
-5. Conclude with operational playbook and next enhancements.
+### Current limitations
+- Rule-based inference may miss nuanced causal interactions
+- Some questions rely on fixed template assumptions (for example, festival window)
+- Text keyword inference quality depends on note/feedback quality
+
+### Next improvements
+- Add ML-based cause ranking on top of rule outputs
+- Add confidence score per inferred cause
+- Add scenario-specific visualization tabs
+- Export dashboard answers directly to `.docx` for submission packaging
+
+## 12. Conclusion
+This solution converts fragmented logistics signals into a practical analytics workflow that is easy to run, explain, and demo. It provides both operational visibility (what is failing) and actionable diagnosis (why it is failing and what to do next), aligned to the assignment's expected outcomes.
