@@ -46,6 +46,19 @@ def load_dataset(data_dir: Path = DATA_DIR) -> dict[str, pd.DataFrame]:
     }
 
     def read_csv(name: str) -> pd.DataFrame:
+        """
+        Reads a CSV file from the specified data directory and returns it as a pandas DataFrame.
+
+        Args:
+            name (str): The name of the CSV file (without the '.csv' extension).
+
+        Returns:
+            pd.DataFrame: The contents of the CSV file as a DataFrame, with specified columns parsed as dates and all columns read as strings.
+
+        Raises:
+            FileNotFoundError: If the specified CSV file does not exist.
+            pd.errors.ParserError: If there is an error parsing the CSV file.
+        """
         path = data_dir / f"{name}.csv"
         return pd.read_csv(path, parse_dates=date_cols.get(name, []), dtype=str)
 

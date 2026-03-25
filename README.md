@@ -1,5 +1,21 @@
 # Delivery Failure Root-Cause Analysis System
 
+## ✅ How to Run (Evaluator, ~2 minutes)
+
+```bash
+cd /Users/monika/projects/ai_assignemnts
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 test_setup.py
+python3 analyze_deliveries.py
+```
+
+Expected checks:
+- `test_setup.py` ends with: `All checks passed`
+- `analyze_deliveries.py` prints 6 scenario blocks (city, client, warehouse, city comparison, peak period, onboarding risk)
+- Optional output capture: `python3 analyze_deliveries.py > docs/sample_outputs.txt`
+
 ## 📁 Project Structure
 
 ```
@@ -39,6 +55,7 @@ brew install python3
 cd /Users/monika/projects/ai_assignemnts
 python3 -m venv venv
 source venv/bin/activate
+python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -r requirements.txt
 ```
 

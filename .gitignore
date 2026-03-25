@@ -2,4 +2,5 @@
 .venv/
 __pycache__/
 *.pyc
+analytics.db
 third-assignment-sample-data-set (1).zip
